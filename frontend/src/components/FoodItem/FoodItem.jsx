@@ -44,7 +44,7 @@ import './FoodItem.css'
 import { assets } from '../../assets/assets'
 import { StoreContext } from '../context/StoreContext';
 
-const FoodItem = ({id,name,price,description,image}) => {
+const FoodItem = ({id,name,price,description,image,restaurantId}) => {
 
     const {cartItems,addToCart,removeFromCart,url,token} = useContext(StoreContext);
 
@@ -71,6 +71,9 @@ const FoodItem = ({id,name,price,description,image}) => {
                 <p>{name}</p>
                 <img src={assets.rating_starts} alt="" />
             </div>
+            {restaurantId?.name && (
+                <p className="food-item-restaurant">{restaurantId.name}</p>
+            )}
             <p className="food-item-desc">{description}</p>
             <p className="food-item-price">₹{price}</p>
         </div>

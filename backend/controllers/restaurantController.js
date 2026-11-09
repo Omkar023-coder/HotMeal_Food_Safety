@@ -1,4 +1,5 @@
 import restaurantModel from "../models/restaurantModel.js";
+import foodModel from "../models/foodModel.js";
 
 // Add Restaurant
 const addRestaurant = async (req, res) => {
@@ -100,6 +101,15 @@ const deleteRestaurant = async (req, res) => {
             return res.json({
                 success: false,
                 message: "Restaurant not found"
+            });
+        }
+
+        // Safety check — refuse deletion if food items reference this restaurant
+        const associatedFoods = await foodModel.countDocuments({ restaurantId: req.body.id });
+        if (associatedFoods > 0) {
+            return res.json({
+                success: false,
+                message: `Cannot delete restaurant because ${associatedFoods} food item(s) are associated with it.`
             });
         }
 

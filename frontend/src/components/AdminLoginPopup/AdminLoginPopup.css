@@ -1,0 +1,102 @@
+/* Overlay — matches existing LoginPopup overlay */
+.admin-login-popup {
+    position: fixed;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: #00000090;
+    display: grid;
+}
+
+/* Card */
+.admin-login-popup-container {
+    place-self: center;
+    width: max(23vw, 330px);
+    color: #808080;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 25px 30px;
+    border-radius: 8px;
+    font-size: 14px;
+    animation: fadeIn 0.5s;
+    border-top: 4px solid tomato;
+}
+
+/* Title row */
+.admin-login-popup-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+}
+
+.admin-login-popup-title h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.admin-login-popup-title img {
+    width: 16px;
+    cursor: pointer;
+}
+
+/* Subtitle */
+.admin-login-popup-subtitle {
+    color: #888;
+    font-size: 13px;
+    margin-top: -10px;
+}
+
+/* Inputs */
+.admin-login-popup-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-login-popup-inputs input {
+    outline: none;
+    border: 1px solid #c9c9c9;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.admin-login-popup-inputs input:focus {
+    border-color: tomato;
+}
+
+/* Error message */
+.admin-login-popup-error {
+    color: #c62828;
+    background-color: #fdecea;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Submit button — matches existing popup button style */
+.admin-login-popup-container button {
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    color: white;
+    background-color: tomato;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.2s;
+}
+
+.admin-login-popup-container button:hover:not(:disabled) {
+    background-color: #e55a2b;
+}
+
+.admin-login-popup-container button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

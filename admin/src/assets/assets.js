@@ -6,7 +6,7 @@ import upload_area from './upload_area.png'
 import parcel_icon from './parcel_icon.png'
 import hotmeal2 from './hotmeal2.png';
 
-export const assets ={
+export const assets = {
     logo,
     add_icon,
     order_icon,
@@ -15,5 +15,3 @@ export const assets ={
     parcel_icon,
     hotmeal2
 }
-
-export const url = "https://hotmeal-backend.onrender.com"

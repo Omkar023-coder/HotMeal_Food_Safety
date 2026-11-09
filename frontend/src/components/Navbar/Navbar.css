@@ -38,7 +38,31 @@
 }
 
 .navbar button:hover {
-background-color: #fff4f2;
+    background-color: #fff4f2;
+}
+
+/* Two-button container shown when not logged in */
+.navbar-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Admin Login button — distinct look so customers know it's separate */
+.navbar-admin-btn {
+    background: transparent !important;
+    color: tomato !important;
+    border: 1px solid tomato !important;
+    font-size: 14px !important;
+    padding: 8px 18px !important;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: .3s;
+    font-weight: 600;
+}
+
+.navbar-admin-btn:hover {
+    background-color: #fff4f2 !important;
 }
 
 .navbar .active{

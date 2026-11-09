@@ -24,7 +24,8 @@ const AddRestaurant = ({ url }) => {
     const onSubmitHandler = async (event) => {
         event.preventDefault()
         try {
-            const response = await axios.post(`${url}/api/restaurant/add`, data)
+            const token = localStorage.getItem('token')
+            const response = await axios.post(`${url}/api/restaurant/add`, data, { headers: { token } })
             if (response.data.success) {
                 setData({
                     name: '',

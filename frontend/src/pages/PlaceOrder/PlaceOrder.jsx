@@ -124,7 +124,9 @@ import { useNavigate } from 'react-router-dom';
 // dotenv.config();
 
 const PlaceOrder = () => {
-  const { getTotalCartAmount, token, food_list, cartItems, url,setCartItems } = useContext(StoreContext);
+  const { getTotalCartAmount, token, food_list, cartItems, url, setCartItems } = useContext(StoreContext);
+  const navigate = useNavigate();
+
   const [data, setData] = useState({
     firstName: "",
     lastName: "",
@@ -175,33 +177,43 @@ const PlaceOrder = () => {
 
       // 2. Trigger Razorpay Checkout
       const options = {
-        key:'rzp_test_t4LUM04KXw6wHc', // Your Razorpay Key ID
-        amount: amount * 100, // amount in paise (1 INR = 100 paise)
+        key: 'rzp_test_Txax0w4cETEcOQ', // Must match RAZORPAY_KEY_ID in backend .env
+        amount: amount * 100,            // paise
         currency: "INR",
         name: "Hotmeal",
         description: "Payment for your order",
-        order_id: order_id, // order_id from backend
-        handler: function (response) {
-          // 3. Send payment ID to backend for verification
-          axios.post(url + '/api/order/verify', {       //verifyPayment
-            payment_id: response.razorpay_payment_id,
-            order_id: response.razorpay_order_id,
-            signature: response.razorpay_signature,
-            success: response.success ? 'true' : 'false'  // Include the success status here
-          }, { headers: { token } })
-            .then(paymentResponse => {
-              if (paymentResponse.data.success) {
-                window.location.replace('/order/success'); // Redirect on success
-              } else {
-                alert("Payment verification failed.");
-              }
-            }).catch(() => {
-              // window.location.replace('/order/success');
+        order_id: order_id,
+        handler: async function (razorpayResponse) {
+          // handler fires ONLY on successful payment — success is always true here
+          console.log("[PlaceOrder] Razorpay payment success, sending verify request");
+          try {
+            const paymentResponse = await axios.post(
+              url + '/api/order/verify',
+              {
+                payment_id: razorpayResponse.razorpay_payment_id,
+                order_id:   razorpayResponse.razorpay_order_id,
+                signature:  razorpayResponse.razorpay_signature,
+                success:    'true'   // handler only fires on success
+              },
+              { headers: { token } }
+            );
+            if (paymentResponse.data.success) {
               setCartItems({});
               navigate('/myorders');
-              // alert("Error during payment verification.");
-              
-            });
+            } else {
+              alert("Payment verification failed: " + paymentResponse.data.message);
+            }
+          } catch (err) {
+            console.error("[PlaceOrder] verify error:", err);
+            alert("Error during payment verification.");
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            // User closed the modal without paying — navigate them away cleanly
+            console.log("[PlaceOrder] Razorpay modal dismissed by user");
+            navigate('/cart');
+          }
         },
         prefill: {
           name: data.firstName + ' ' + data.lastName,
@@ -220,7 +232,6 @@ const PlaceOrder = () => {
     }
   }
 
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) {

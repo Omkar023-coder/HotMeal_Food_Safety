@@ -19,7 +19,8 @@ const List = ({url}) => {
   }
 
   const removeFood = async (foodId) =>{
-    const response = await axios.post(`${url}/api/food/remove`,{id:foodId})
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${url}/api/food/remove`,{id:foodId},{ headers:{ token } })
     await fetchList();
     if(response.data.success){
       toast.success(response.data.message)
@@ -38,6 +39,7 @@ const List = ({url}) => {
         <div className="list-table-format title">
             <b>Image</b>
             <b>Name</b>
+            <b>Restaurant</b>
             <b>Category</b>
             <b>Price</b>
             <b>Action</b>
@@ -47,6 +49,7 @@ const List = ({url}) => {
             <div key={index} className="list-table-format">
               <img src={`${url}/images/`+item.image} alt="" />
               <p>{item.name}</p>
+              <p>{item.restaurantId?.name || 'Not assigned'}</p>
               <p>{item.category}</p>
               <p>${item.price}</p>
               <p onClick={()=> removeFood(item._id)} className='cursor'>X</p>

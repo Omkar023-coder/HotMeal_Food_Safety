@@ -4,29 +4,42 @@ import { useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify';
 import { useEffect } from 'react';
-import { assets } from './../../../../frontend/src/assets/assets';
+import { assets } from '../../assets/assets';
 
 const Orders = ({url}) => {
 
   const [orders, setOrders] = useState([])
 
-  const fetchAllOrders = async () =>{
-    const response = await axios.get(url+"/api/order/list");
-    if(response.data.success){
-      setOrders(response.data.data);
-      console.log(response.data.data);
-    }else{
-      toast.error("Error")
+  const fetchAllOrders = async () => {
+    try {
+      const response = await axios.get(url + "/api/order/list", {
+        headers: { token: localStorage.getItem("token") }
+      });
+      if (response.data.success) {
+        setOrders(response.data.data);
+        console.log(response.data.data);
+      } else {
+        toast.error(response.data.message || "Error fetching orders");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error connecting to server");
     }
   }
 
-  const statusHandler = async (event,orderId) =>{
-    const response = await axios.post(url+"/api/order/status",{
-      orderId,
-      status:event.target.value
-    })
-    if(response.data.success){
-      await fetchAllOrders();
+  const statusHandler = async (event, orderId) => {
+    try {
+      const response = await axios.post(
+        url + "/api/order/status",
+        { orderId, status: event.target.value },
+        { headers: { token: localStorage.getItem("token") } }
+      );
+      if (response.data.success) {
+        await fetchAllOrders();
+      } else {
+        toast.error(response.data.message || "Error updating status");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error connecting to server");
     }
   }
 

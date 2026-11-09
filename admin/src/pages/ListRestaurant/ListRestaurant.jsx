@@ -24,6 +24,25 @@ const ListRestaurant = ({ url }) => {
         }
     }
 
+    const removeRestaurant = async (restaurantId) => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await axios.post(
+                `${url}/api/restaurant/remove`,
+                { id: restaurantId },
+                { headers: { token } }
+            )
+            if (response.data.success) {
+                toast.success(response.data.message)
+                await fetchList()
+            } else {
+                toast.error(response.data.message)
+            }
+        } catch (error) {
+            toast.error('Error connecting to server')
+        }
+    }
+
     useEffect(() => {
         fetchList()
     }, [])
@@ -42,6 +61,7 @@ const ListRestaurant = ({ url }) => {
                     <b>Phone</b>
                     <b>Cuisine</b>
                     <b>Status</b>
+                    <b>Action</b>
                 </div>
 
                 {loading ? (
@@ -61,6 +81,10 @@ const ListRestaurant = ({ url }) => {
                             <p className={`status-badge status-${item.status?.toLowerCase()}`}>
                                 {item.status}
                             </p>
+                            <p
+                                onClick={() => removeRestaurant(item._id)}
+                                className='cursor'
+                            >X</p>
                         </div>
                     ))
                 )}
