@@ -6,6 +6,7 @@ import userRouter from './routes/userRoute.js';
 import cartRouter from './routes/cartRoute.js';
 import orderRouter from './routes/orderRoute.js';
 import restaurantRouter from './routes/restaurantRoute.js';
+import safetyEvidenceRouter from './routes/safetyEvidenceRoute.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -25,9 +26,10 @@ app.use(cors())
 connectDB();
 
 // api endpoints
-app.use("/api/food",foodRouter)
+app.use("/api/food", foodRouter)
 app.use("/api/restaurant", restaurantRouter)
-app.use("/images",express.static('uploads'))
+app.use("/api/safety-evidence", safetyEvidenceRouter)
+app.use("/images", express.static('uploads'))
 app.use('/api/user', userRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)

@@ -7,6 +7,7 @@ import List from './pages/List/List';
 import Orders from './pages/Orders/Orders';
 import AddRestaurant from './pages/AddRestaurant/AddRestaurant';
 import ListRestaurant from './pages/ListRestaurant/ListRestaurant';
+import SafetyEvidence from './pages/SafetyEvidence/SafetyEvidence';
 import Login from './pages/Login/Login';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -15,7 +16,6 @@ const App = () => {
 
   const url = 'http://localhost:4000';
 
-  // Bootstrap from localStorage — only admit if BOTH token AND role=admin exist
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [role, setRole]   = useState(localStorage.getItem('role') || '');
 
@@ -42,7 +42,6 @@ const App = () => {
   }
 
   // Gate 2 — token exists but role is not admin
-  // (handles stale localStorage from a normal user session)
   if (role !== 'admin') {
     return (
       <>
@@ -61,19 +60,17 @@ const App = () => {
       <div className="app-content">
         <Sidebar />
         <Routes>
-
           {/* Food Routes */}
           <Route path='/add'    element={<Add url={url} />} />
           <Route path='/list'   element={<List url={url} />} />
           <Route path='/orders' element={<Orders url={url} />} />
-
           {/* Restaurant Routes */}
           <Route path='/add-restaurant'  element={<AddRestaurant url={url} />} />
           <Route path='/list-restaurant' element={<ListRestaurant url={url} />} />
-
+          {/* Safety Evidence */}
+          <Route path='/safety-evidence' element={<SafetyEvidence url={url} />} />
           {/* Default */}
           <Route path='*' element={<Add url={url} />} />
-
         </Routes>
       </div>
     </div>
