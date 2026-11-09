@@ -1,0 +1,73 @@
+.add-restaurant {
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 50px;
+    color: #6d6d6d;
+    font-size: 16px;
+}
+
+.add-restaurant form {
+    gap: 20px;
+}
+
+.add-restaurant-field {
+    width: max(40%, 280px);
+}
+
+.add-restaurant-field p {
+    margin-bottom: 6px;
+}
+
+.add-restaurant-field input {
+    padding: 10px;
+    border: 1px solid #c5c5c5;
+    border-radius: 4px;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+}
+
+.add-restaurant-field input:focus {
+    border-color: tomato;
+}
+
+.add-restaurant-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.add-restaurant-row .add-restaurant-field {
+    flex: 1;
+    min-width: 160px;
+    max-width: 220px;
+    width: auto;
+}
+
+.add-btn {
+    max-width: 120px;
+    border: none;
+    padding: 10px;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .add-restaurant {
+        width: 90%;
+    }
+
+    .add-restaurant-field {
+        width: 100%;
+    }
+
+    .add-restaurant-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .add-restaurant-row .add-restaurant-field {
+        max-width: 100%;
+    }
+}

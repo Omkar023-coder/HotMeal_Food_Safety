@@ -1,0 +1,55 @@
+.list-restaurant-table {
+    margin-top: 10px;
+}
+
+.list-restaurant-format {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1fr 1fr 0.8fr 1.2fr 1fr 0.8fr;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border: 1px solid #cacaca;
+    font-size: 13px;
+}
+
+.list-restaurant-format.title {
+    background-color: #f9f9f9;
+}
+
+.list-restaurant-message {
+    padding: 20px 15px;
+    color: #6d6d6d;
+    font-size: 14px;
+    border: 1px solid #cacaca;
+    border-top: 0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.status-active {
+    background-color: #e6f4ea;
+    color: #2e7d32;
+}
+
+.status-inactive {
+    background-color: #fdecea;
+    color: #c62828;
+}
+
+@media (max-width: 900px) {
+    .list-restaurant-format {
+        grid-template-columns: 1.5fr 1.5fr 1fr 1fr;
+        gap: 8px;
+    }
+
+    .list-restaurant-format.title {
+        display: none;
+    }
+}

@@ -5,7 +5,9 @@ import { Routes, Route } from 'react-router-dom';
 import Add from './pages/Add/Add';
 import List from './pages/List/List';
 import Orders from './pages/Orders/Orders';
-import { ToastContainer} from 'react-toastify';
+import AddRestaurant from './pages/AddRestaurant/AddRestaurant';
+import ListRestaurant from './pages/ListRestaurant/ListRestaurant';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
@@ -14,16 +16,47 @@ const App = () => {
 
   return (
     <div>
-      <ToastContainer/>
-      <Navbar/>
-      <hr/>
+      <ToastContainer />
+
+      <Navbar />
+
+      <hr />
+
       <div className="app-content">
-        <Sidebar/>
+
+        <Sidebar />
+
         <Routes>
-          <Route path='/add' element={<Add url={url} />} />
-          <Route path='/list' element={<List url={url}/>} />
-          <Route path='/orders' element={<Orders url={url}/>} />
+
+          {/* Existing Food Routes */}
+          <Route
+            path='/add'
+            element={<Add url={url} />}
+          />
+
+          <Route
+            path='/list'
+            element={<List url={url} />}
+          />
+
+          <Route
+            path='/orders'
+            element={<Orders url={url} />}
+          />
+
+          {/* Restaurant Routes */}
+          <Route
+            path='/add-restaurant'
+            element={<AddRestaurant url={url} />}
+          />
+
+          <Route
+            path='/list-restaurant'
+            element={<ListRestaurant url={url} />}
+          />
+
         </Routes>
+
       </div>
     </div>
   )
