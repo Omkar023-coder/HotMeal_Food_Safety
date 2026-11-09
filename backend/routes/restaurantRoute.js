@@ -3,7 +3,8 @@ import express from "express";
 import {
     addRestaurant,
     listRestaurant,
-    getRestaurant
+    getRestaurant,
+    deleteRestaurant
 } from "../controllers/restaurantController.js";
 
 import authMiddleware from "../middleware/auth.js";
@@ -19,10 +20,24 @@ restaurantRouter.post(
     addRestaurant
 );
 
-// Get All Restaurants
-restaurantRouter.get("/list", listRestaurant);
+// Get All Restaurants — Public
+restaurantRouter.get(
+    "/list",
+    listRestaurant
+);
 
-// Get Single Restaurant
-restaurantRouter.get("/:id", getRestaurant);
+// Get Single Restaurant — Public
+restaurantRouter.get(
+    "/:id",
+    getRestaurant
+);
+
+// Delete Restaurant — Admin Only
+restaurantRouter.post(
+    "/remove",
+    authMiddleware,
+    adminAuth,
+    deleteRestaurant
+);
 
 export default restaurantRouter;

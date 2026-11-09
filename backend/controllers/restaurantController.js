@@ -91,8 +91,38 @@ const getRestaurant = async (req, res) => {
 };
 
 
+// Delete Restaurant
+const deleteRestaurant = async (req, res) => {
+    try {
+        const restaurant = await restaurantModel.findById(req.body.id);
+
+        if (!restaurant) {
+            return res.json({
+                success: false,
+                message: "Restaurant not found"
+            });
+        }
+
+        await restaurantModel.findByIdAndDelete(req.body.id);
+
+        res.json({
+            success: true,
+            message: "Restaurant Removed"
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({
+            success: false,
+            message: error.message || "Error removing restaurant"
+        });
+    }
+};
+
+
 export {
     addRestaurant,
     listRestaurant,
-    getRestaurant
+    getRestaurant,
+    deleteRestaurant
 };
