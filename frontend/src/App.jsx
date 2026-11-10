@@ -8,6 +8,7 @@ import Footer from './components/Footer/Footer'
 import LoginPopup from './components/LoginPopup/LoginPopup'
 import AdminLoginPopup from './components/AdminLoginPopup/AdminLoginPopup'
 import MyOrders from './pages/MyOrders/MyOrders'
+import RestaurantSafety from './pages/RestaurantSafety/RestaurantSafety'
 
 const App = () => {
 
@@ -32,6 +33,7 @@ const App = () => {
                     <Route path='/cart' element={<Cart />} />
                     <Route path='/order' element={<PlaceOrder />} />
                     <Route path='/myorders' element={<MyOrders />} />
+                    <Route path='/restaurant/:restaurantId/safety' element={<RestaurantSafety />} />
                 </Routes>
             </div>
             <Footer />

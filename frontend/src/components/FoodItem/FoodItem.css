@@ -39,6 +39,38 @@
     margin-bottom: 6px;
 }
 
+/* Row containing restaurant name + safety button */
+.food-item-restaurant-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 6px;
+}
+
+.food-item-restaurant-row .food-item-restaurant {
+    margin-bottom: 0;
+}
+
+.food-item-safety-btn {
+    background: transparent;
+    border: 1px solid #ff7a45;
+    color: #ff7a45;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.food-item-safety-btn:hover {
+    background-color: #ff7a45;
+    color: white;
+}
+
 .food-item-desc{
     color: #676767;
     font-size: 12px;
