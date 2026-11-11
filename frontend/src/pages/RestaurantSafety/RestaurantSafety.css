@@ -1,10 +1,10 @@
-/* ── Page wrapper ───────────────────────────────────────── */
+/* ── Page wrapper ────────────────────────────────────────────────────────── */
 .restaurant-safety {
     margin: 40px 0 60px;
     animation: fadeIn 0.5s;
 }
 
-/* ── Back button ────────────────────────────────────────── */
+/* ── Back button ─────────────────────────────────────────────────────────── */
 .rs-back-btn {
     background: transparent;
     border: 1px solid #c5c5c5;
@@ -17,12 +17,14 @@
     transition: border-color 0.2s, color 0.2s;
 }
 
-.rs-back-btn:hover {
+.rs-back-btn:hover,
+.rs-back-btn:focus-visible {
     border-color: tomato;
     color: tomato;
+    outline: none;
 }
 
-/* ── Header ─────────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────────────────────── */
 .rs-header {
     display: flex;
     align-items: flex-start;
@@ -55,7 +57,7 @@
     color: #777;
 }
 
-/* ── Summary strip ───────────────────────────────────────── */
+/* ── Summary strip ────────────────────────────────────────────────────────── */
 .rs-summary {
     display: flex;
     gap: 0;
@@ -92,7 +94,7 @@
     color: #333;
 }
 
-/* ── Disclaimer ─────────────────────────────────────────── */
+/* ── Disclaimer ─────────────────────────────────────────────────────────── */
 .rs-disclaimer {
     font-size: 12px;
     color: #888;
@@ -103,7 +105,7 @@
     border-radius: 0 4px 4px 0;
 }
 
-/* ── Loading / Error / Empty states ────────────────────── */
+/* ── Loading / Error / Empty states ──────────────────────────────────────── */
 .rs-loading,
 .rs-error,
 .rs-empty {
@@ -128,28 +130,92 @@
     margin-top: 6px;
 }
 
-/* ── Evidence list ──────────────────────────────────────── */
-.rs-evidence-list {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+.rs-retry-btn {
+    margin-top: 16px;
+    padding: 8px 24px;
+    border: 1px solid tomato;
+    background: transparent;
+    color: tomato;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
 }
 
-/* ── Evidence card ──────────────────────────────────────── */
-.rs-card {
+.rs-retry-btn:hover,
+.rs-retry-btn:focus-visible {
+    background-color: tomato;
+    color: white;
+    outline: none;
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────────── */
+.rs-timeline {
+    display: flex;
+    flex-direction: column;
+}
+
+.rs-timeline-item {
+    display: flex;
+    gap: 0;
+    position: relative;
+}
+
+/* ── Marker column (dot + connector line) ────────────────────────────────── */
+.rs-timeline-marker-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 36px;
+}
+
+.rs-timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-top: 22px;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #ddd;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+/* Coloured dots by evidence type */
+.rs-dot-inspection    { background-color: #1565c0; box-shadow: 0 0 0 2px #1565c0; }
+.rs-dot-violation     { background-color: #c62828; box-shadow: 0 0 0 2px #c62828; }
+.rs-dot-complaint     { background-color: #e65100; box-shadow: 0 0 0 2px #e65100; }
+.rs-dot-certification { background-color: #2e7d32; box-shadow: 0 0 0 2px #2e7d32; }
+.rs-dot-notice        { background-color: #f57f17; box-shadow: 0 0 0 2px #f57f17; }
+.rs-dot-review        { background-color: #6a1b9a; box-shadow: 0 0 0 2px #6a1b9a; }
+.rs-dot-other         { background-color: #616161; box-shadow: 0 0 0 2px #616161; }
+
+.rs-timeline-line {
+    width: 2px;
+    flex: 1;
+    background-color: #e0e0e0;
+    margin-top: 2px;
+}
+
+/* ── Content card ────────────────────────────────────────────────────────── */
+.rs-timeline-content {
+    flex: 1;
     border: 1px solid #e8e8e8;
     border-radius: 10px;
-    padding: 20px 24px;
+    padding: 18px 22px;
     background: #fff;
     box-shadow: 0 1px 4px #00000008;
+    margin-bottom: 16px;
+    margin-left: 14px;
     transition: box-shadow 0.2s;
 }
 
-.rs-card:hover {
+.rs-timeline-content:hover {
     box-shadow: 0 2px 10px #00000012;
 }
 
-.rs-card-header {
+.rs-timeline-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -161,6 +227,12 @@
 .rs-date {
     font-size: 12px;
     color: #999;
+}
+
+.rs-date-fallback {
+    font-size: 11px;
+    color: #bbb;
+    font-style: italic;
 }
 
 .rs-card-title {
@@ -175,9 +247,11 @@
     color: #555;
     line-height: 1.6;
     margin-bottom: 14px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-/* ── Status + Severity badges ───────────────────────────── */
+/* ── Status + Severity badges ─────────────────────────────────────────────── */
 .rs-badges {
     display: flex;
     flex-wrap: wrap;
@@ -208,7 +282,7 @@
 .rs-severity-low      { background-color: #e8f5e9; color: #2e7d32; }
 .rs-severity-unknown  { background-color: #eceff1; color: #546e7a; }
 
-/* ── Type badge ─────────────────────────────────────────── */
+/* ── Type badge ──────────────────────────────────────────────────────────── */
 .rs-type-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -226,10 +300,11 @@
 .rs-type-review       { background-color: #f3e5f5; color: #6a1b9a; }
 .rs-type-other        { background-color: #f5f5f5; color: #616161; }
 
-/* ── Source ─────────────────────────────────────────────── */
+/* ── Source ──────────────────────────────────────────────────────────────── */
 .rs-source {
     font-size: 13px;
     color: #777;
+    word-break: break-all;
 }
 
 .rs-source-label {
@@ -244,11 +319,14 @@
     transition: opacity 0.2s;
 }
 
-.rs-source-link:hover {
+.rs-source-link:hover,
+.rs-source-link:focus-visible {
     opacity: 0.75;
+    outline: none;
+    text-decoration: underline;
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .rs-summary {
         flex-direction: column;
@@ -263,11 +341,61 @@
         border-bottom: none;
     }
 
-    .rs-card {
-        padding: 16px;
+    .rs-timeline-content {
+        padding: 14px 16px;
     }
 
     .rs-title {
         font-size: 22px;
+    }
+
+    .rs-timeline-marker-col {
+        width: 28px;
+    }
+
+    .rs-timeline-content {
+        margin-left: 10px;
+    }
+
+    .rs-card-title {
+        font-size: 15px;
+    }
+
+    .rs-card-description {
+        font-size: 13px;
+    }
+
+    .rs-badges {
+        gap: 6px;
+    }
+
+    .rs-badge {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rs-header {
+        gap: 10px;
+    }
+
+    .rs-shield {
+        font-size: 32px;
+    }
+
+    .rs-timeline-marker-col {
+        width: 24px;
+    }
+
+    .rs-timeline-content {
+        margin-left: 8px;
+        padding: 12px 14px;
+    }
+
+    .rs-timeline-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
     }
 }
