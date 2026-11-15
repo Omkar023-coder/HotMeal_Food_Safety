@@ -1,4 +1,4 @@
-# HotMeal — Ingestion Module (Milestones 5A + 5B + 5C)
+# HotMeal — Ingestion Module (Milestones 5A → 5B → 5C → 5D)
 
 ---
 
@@ -8,7 +8,8 @@
 |---|---|---|
 | 5A | ✅ | Pipeline foundation, local test source |
 | 5B | ✅ | Real authoritative sources (Chicago CDPH, NYC DOHMH) |
-| 5C | ✅ | Production-oriented pipeline with granular result tracking, rawData preservation, idempotency verification |
+| 5C | ✅ | Production pipeline with granular result tracking, rawData |
+| 5D | ✅ | Incremental ingestion, scheduling, run locking, checkpoint safety |
 
 ---
 
@@ -18,166 +19,168 @@
 
 ---
 
+## 5D Features
+
+### Incremental Ingestion
+
+Each source declares its incremental capability in the source registry:
+
+| Source | Supports Incremental | Strategy |
+|---|---|---|
+| local-test | ❌ No | none |
+| chicago-food-inspections | ✅ Yes | timestamp (`inspection_date`) |
+| nyc-dohmh-inspections | ✅ Yes | timestamp (`inspection_date`) |
+| fssai-india | ❌ No | disabled |
+
+For sources that support incremental: the adapter accepts a `sinceDate` parameter and filters API results by date.
+
+For sources that don't: full fetch + deduplication (5C behavior) remains active.
+
+### Persistent Ingestion State
+
+Per-source state stored in MongoDB (`ingestionState` collection):
+
+- `lastCheckpoint` — timestamp of last successful incremental fetch
+- `lastRunId` — ObjectId of last ingestion run
+- `lastSuccessAt` — when last successful run completed
+- `lastAttemptAt` — when last run was attempted
+- `lastError` — last error message
+
+State survives server restarts. Not stored in memory.
+
+### Checkpoint Safety
+
+**Mandatory rule:**
+
+| Outcome | Checkpoint |
+|---|---|
+| Successful run | Advances to max evidence date |
+| Partial failure (unresolved/validation) | Advances (these are expected, not errors) |
+| Pipeline failure | Does NOT advance |
+| Source API failure | Does NOT advance |
+| Database error | Does NOT advance |
+
+This prevents silent data loss. Retries can safely reprocess the same records.
+
+### Scheduling
+
+Lightweight `setInterval`-based scheduler. No Redis, no BullMQ.
+
+**Configuration (environment variables):**
+
+```bash
+SAFETY_INGESTION_ENABLED=false              # default: disabled
+SAFETY_INGESTION_INTERVAL_MINUTES=360        # default: 6 hours
+```
+
+**Defaults are SAFE:** scheduler is disabled unless explicitly enabled.
+
+Starting the server does NOT trigger ingestion. The scheduler only runs at the configured interval after enable.
+
+### Run Locking
+
+Prevents two concurrent ingestion runs for the same source.
+
+**MongoDB-based lock** (not in-memory):
+- `lockStatus`: `unlocked` | `locked`
+- `lockAcquiredAt`, `lockRunId`, `lockExpiresAt`
+- Lock lease: 10 minutes (configurable via `INGESTION_LOCK_LEASE_MS`)
+
+If a second run is attempted while the first is in progress:
+- Returns HTTP 409 with `skipped: true`
+- Records `already_running` status in audit
+
+### Stale Lock Recovery
+
+If a process crashes while holding a lock:
+- Lock has an expiration time (`lockExpiresAt`)
+- Next run attempt checks for stale locks
+- Stale locks are automatically recovered
+- No permanent deadlocks
+
+### Retry Behavior
+
+- Source API temporarily unavailable → run fails → checkpoint unchanged → next run retries
+- MongoDB temporary failure → run fails → checkpoint unchanged → next run retries
+- One bad source record → record failure isolated → other records continue
+- Deduplication makes retries idempotent — no duplicate evidence created
+
+---
+
 ## Pipeline Flow
 
 ```
-Authoritative Source
-        ↓
 Source Adapter
-  fetchRecords() → RawRecord[]
+  fetchRecords({ sinceDate }) → RawRecord[]
         ↓
 Normalization Service
-  trim, clean enums, parse dates → NormalizedRecord
         ↓
 Validation Service
-  required fields, enum bounds → ValidatedRecord
         ↓
 Restaurant Identity Resolver
-  name + city exact match → restaurantId
         ↓
 Deduplication Service
-  externalRecordId triple OR contentHash → isDuplicate
         ↓
-Safety Evidence insert
-  provenance fields populated → MongoDB
+Safety Evidence insert (provenance populated) → MongoDB
         ↓
-Ingestion Run Audit
-  per-run counts + error log → MongoDB
+Ingestion Run Audit → MongoDB
+        ↓
+Ingestion State (checkpoint updated on success) → MongoDB
+        ↓
+Lock released
 ```
 
 ---
 
-## Result Tracking (5C Granularity)
+## API Endpoints
 
-Each ingestion run now returns and records:
-
-| Field | Meaning |
-|---|---|
-| `fetched` | Total records returned by the source adapter |
-| `inserted` | New evidence records written to MongoDB |
-| `duplicates` | Records already in DB — skipped (idempotent) |
-| `unresolved` | Records that could not be matched to a HotMeal restaurant |
-| `validationFailed` | Records that failed title/description/enum validation |
-| `failed` | Unexpected per-record processing errors |
-
-Example response for Chicago source (HotMeal DB has Indian restaurants only):
-
-```json
-{
-  "fetched": 50,
-  "inserted": 0,
-  "duplicates": 0,
-  "unresolved": 50,
-  "validationFailed": 0,
-  "failed": 0
-}
-```
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/ingestion/run` | Admin | Trigger manual ingestion |
+| GET | `/api/ingestion/sources` | Admin | List enabled sources |
+| GET | `/api/ingestion/status` | Admin | Ingestion state + scheduler status |
+| GET | `/api/ingestion/runs` | Admin | Recent run history |
 
 ---
 
-## Idempotency
+## Ingestion Run Audit
 
-Running the same source twice produces:
+Each run (manual or scheduled) creates an `ingestionRun` document:
 
-```
-Run 1: fetched=N  inserted=M  duplicates=0
-Run 2: fetched=N  inserted=0  duplicates=M
-```
-
-The deduplication service uses:
-1. `externalRecordId + sourceType + sourceName` triple when available
-2. SHA-256 `contentHash` of stable fields as fallback
-
----
-
-## rawData Preservation
-
-Each source adapter now includes a `rawData` field on every raw record.
-
-`rawData` contains a safe subset of the original source API response — the fields most useful for future provenance tracing. It is used only within the ingestion pipeline and is never stored in MongoDB.
-
-This allows the pipeline to include the original source context without polluting the safety evidence schema.
+- `sourceType`, `sourceName`, `startedAt`, `completedAt`
+- `status`: `running` | `completed` | `completed_with_errors` | `failed` | `skipped` | `already_running`
+- `triggerType`: `manual` | `scheduled` | `retry`
+- `checkpointBefore`, `checkpointAfter`
+- `fetchedCount`, `insertedCount`, `skippedCount`, `failedCount`
+- `unresolvedCount`, `validationFailedCount`
+- `processingErrors[]`
 
 ---
 
-## Conservative Restaurant Matching
+## Environment Variables
 
-**Rule: FALSE NEGATIVE is safer than FALSE POSITIVE.**
+```bash
+# Scheduler
+SAFETY_INGESTION_ENABLED=false
+SAFETY_INGESTION_INTERVAL_MINUTES=360
 
-A missed record is acceptable. Attaching evidence to the wrong restaurant is not.
+# Lock lease (optional)
+INGESTION_LOCK_LEASE_MS=600000
 
-**Current strategy:**
-1. Match by `restaurantName` (case-insensitive) + `city` (case-insensitive)
-2. Exactly 1 match → accepted
-3. 0 matches → `unresolved`
-4. >1 matches → `unresolved` (ambiguous)
-
-**Current DB state:** HotMeal has Indian restaurants (Pune, Latur).
-Chicago/NYC records all produce `unresolved`. This is correct.
-No fake evidence is inserted.
-
----
-
-## Source Registry
-
-Sources are configured in `backend/config/safetySources.js`.
-
-| Source ID | Status | Authority |
-|---|---|---|
-| `local-test` | ✅ Enabled | Test only — no internet |
-| `chicago-food-inspections` | ✅ Enabled | Chicago CDPH (live Socrata API) |
-| `nyc-dohmh-inspections` | ✅ Enabled | NYC DOHMH (live Socrata API) |
-| `fssai-india` | ❌ Disabled | FSSAI — no official public API available |
-
----
-
-## Admin API
-
-### Trigger ingestion
-
+# Source-specific (optional)
+CHICAGO_SOCRATA_APP_TOKEN=
+NYC_SOCRATA_APP_TOKEN=
+CHICAGO_FETCH_LIMIT=50
+NYC_FETCH_LIMIT=50
 ```
-POST /api/ingestion/run
-Authorization: token <admin-jwt>
-Content-Type: application/json
-
-{ "source": "chicago-food-inspections" }
-```
-
-### List available sources
-
-```
-GET /api/ingestion/sources
-Authorization: token <admin-jwt>
-```
-
----
-
-## Security
-
-- All ingestion endpoints require `authMiddleware + adminAuth`
-- No token → `"Not Authorized. Login Again."`
-- Normal user token → `"Access denied. Admin only."`
-- Disabled source → 400 with explanation
-- Unknown source → 400 with available source IDs
-
----
-
-## Adding a New Source
-
-1. Add entry to `backend/config/safetySources.js`
-2. Create `backend/ingestion/sources/<id>Source.js`
-3. Implement `fetchRecords()` returning raw records with `rawData` field
-4. Import and register adapter in `backend/controllers/ingestionController.js`
-5. The pipeline runs automatically — no changes to services needed
 
 ---
 
 ## Out of Scope
 
-- ❌ No automatic startup ingestion
-- ❌ No cron jobs / scheduled tasks
-- ❌ No web scraping (official APIs only)
-- ❌ No AI-generated evidence
+- ❌ No Redis / Kafka / RabbitMQ
 - ❌ No PostgreSQL / pgvector / embeddings / RAG / LLM
+- ❌ No cron jobs (uses setInterval)
+- ❌ No Docker / AWS deployment
 
-Those belong to later milestones (5D, 6, 7, 8).
+Those belong to future milestones (6, 7, 8).

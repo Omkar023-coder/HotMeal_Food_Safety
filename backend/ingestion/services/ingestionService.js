@@ -1,24 +1,15 @@
 /**
- * Ingestion Service — Milestone 5C
+ * Ingestion Service — Milestone 5D
  *
- * Central pipeline orchestrator.
+ * Central pipeline orchestrator with:
+ *   - Run locking (concurrent-run protection)
+ *   - Incremental fetching (source-specific)
+ *   - Checkpoint safety (only advance after success)
+ *   - Persistent state (survives restarts)
+ *   - Granular result tracking (from 5C)
+ *   - Per-record error isolation
  *
- * Pipeline per record:
- *   Fetch → Normalize → Validate → Resolve Restaurant →
- *   Dedup Check → Insert → Record Result
- *
- * Source-specific logic lives inside source adapters, NOT here.
- * This service is source-agnostic.
- *
- * Result tracking (5C granularity):
- *   fetched           — total records returned by source adapter
- *   inserted          — new evidence records written to MongoDB
- *   duplicates        — records already in DB (skipped, idempotent)
- *   unresolved        — records that could not be matched to a HotMeal restaurant
- *   validationFailed  — records that failed content validation
- *   failed            — unexpected per-record processing errors
- *
- * One bad record never stops the pipeline — per-record try/catch throughout.
+ * Both manual and scheduled runs call this same service.
  */
 
 import { normalize }              from "./normalizationService.js";
@@ -27,22 +18,30 @@ import { resolve as resolveRestaurant } from "./restaurantResolver.js";
 import { checkDuplicate }         from "./deduplicationService.js";
 import safetyEvidenceModel        from "../../models/safetyEvidenceModel.js";
 import ingestionRunModel          from "../../models/ingestionRunModel.js";
+import { acquireLock, releaseLock } from "./ingestionLockService.js";
+import { getSinceDate, advanceCheckpoint, computeNewCheckpoint } from "./incrementalService.js";
 
 /**
  * Run the ingestion pipeline for a given source adapter.
  *
  * @param {Object} sourceAdapter — Must have { sourceType, sourceName, fetchRecords() }
+ * @param {Object} options
+ * @param {string} options.triggerType — "manual" | "scheduled" | "retry"
+ * @param {Object|null} options.sourceMeta — source registry entry (for incremental support)
  * @returns {Promise<Object>} Ingestion summary
  */
-const runIngestion = async (sourceAdapter) => {
+const runIngestion = async (sourceAdapter, options = {}) => {
     const { sourceType, sourceName } = sourceAdapter;
+    const triggerType = options.triggerType || "manual";
+    const sourceMeta  = options.sourceMeta  || null;
 
-    // ── Create audit run record ───────────────────────────────────────────────
+    // ── Pre-create the run record (needed for lock acquisition) ──────────────
     const run = new ingestionRunModel({
         sourceType,
         sourceName,
         startedAt: new Date(),
         status: "running",
+        triggerType,
         fetchedCount:         0,
         insertedCount:        0,
         skippedCount:         0,
@@ -53,18 +52,57 @@ const runIngestion = async (sourceAdapter) => {
     });
     await run.save();
 
+    // ── Acquire lock ──────────────────────────────────────────────────────────
+    const lockResult = await acquireLock(sourceType, run._id.toString());
+    if (!lockResult.acquired) {
+        // Another run is in progress — skip this one
+        run.status      = "already_running";
+        run.completedAt = new Date();
+        run.processingErrors = [{
+            externalRecordId: null,
+            stage:   "lock",
+            message: lockResult.reason
+        }];
+        await run.save();
+        return {
+            success:   false,
+            skipped:   true,
+            runId:     run._id,
+            sourceType,
+            sourceName,
+            message:   lockResult.reason,
+            fetched:   0,
+            inserted:  0,
+            duplicates: 0,
+            unresolved: 0,
+            validationFailed: 0,
+            failed: 0,
+            errors:    run.processingErrors
+        };
+    }
+
+    // ── Determine incremental sinceDate ───────────────────────────────────────
+    let sinceDate = null;
+    if (sourceMeta?.supportsIncremental) {
+        sinceDate = await getSinceDate(sourceMeta);
+    }
+
+    // Record checkpoint before run
+    const checkpointBefore = sinceDate;
+
     // ── Per-run counters ─────────────────────────────────────────────────────
     let fetched          = 0;
     let inserted         = 0;
-    let duplicates       = 0;   // "skipped" in model/API — renamed internally for clarity
+    let duplicates       = 0;
     let unresolved       = 0;
     let validationFailed = 0;
-    let failed           = 0;   // unexpected errors only
+    let failed           = 0;
     const errors         = [];
+    let rawRecords       = [];
 
     try {
-        // ── Step 1: Fetch raw records from source adapter ─────────────────────
-        const rawRecords = await sourceAdapter.fetchRecords();
+        // ── Step 1: Fetch raw records (pass sinceDate for incremental) ────────
+        rawRecords = await sourceAdapter.fetchRecords({ sinceDate });
         fetched = rawRecords.length;
 
         // ── Step 2: Process each record through the pipeline ──────────────────
@@ -73,7 +111,6 @@ const runIngestion = async (sourceAdapter) => {
                 // 2a. Normalize
                 const normalized = normalize(raw);
 
-                // Ensure sourceType/sourceName from adapter if adapter omitted them
                 if (!normalized.sourceType) normalized.sourceType = sourceType;
                 if (!normalized.sourceName) normalized.sourceName = sourceName;
 
@@ -135,7 +172,6 @@ const runIngestion = async (sourceAdapter) => {
                 inserted++;
 
             } catch (recordError) {
-                // Unexpected per-record error — isolate and continue
                 failed++;
                 errors.push({
                     externalRecordId: raw?.externalRecordId || null,
@@ -144,6 +180,17 @@ const runIngestion = async (sourceAdapter) => {
                 });
             }
         }
+
+        // ── Determine if run succeeded ─────────────────────────────────────────
+        // A run "succeeds" if it completed without fatal/pipeline errors.
+        // Unresolved + validationFailed are expected outcomes, not failures.
+        const runSucceeded = failed === 0;
+
+        // ── Compute new checkpoint ─────────────────────────────────────────────
+        const newCheckpoint = computeNewCheckpoint(rawRecords);
+
+        // ── Advance checkpoint (only if succeeded) ────────────────────────────
+        await advanceCheckpoint(sourceType, runSucceeded, run._id, newCheckpoint);
 
         // ── Finalize audit run ─────────────────────────────────────────────────
         const ranWithErrors = (validationFailed + unresolved + failed) > 0;
@@ -155,52 +202,72 @@ const runIngestion = async (sourceAdapter) => {
         run.unresolvedCount       = unresolved;
         run.validationFailedCount = validationFailed;
         run.processingErrors      = errors;
-        run.status = ranWithErrors ? "completed_with_errors" : "completed";
+        run.checkpointBefore       = checkpointBefore;
+        run.checkpointAfter        = runSucceeded ? newCheckpoint : checkpointBefore;
+        run.status = failed > 0 ? "failed" : (ranWithErrors ? "completed_with_errors" : "completed");
         await run.save();
+
+        // ── Release lock ───────────────────────────────────────────────────────
+        await releaseLock(sourceType, run._id.toString());
 
         return {
             success:         true,
             runId:           run._id,
             sourceType,
             sourceName,
+            triggerType,
+            incremental:      !!sinceDate,
+            checkpointBefore,
+            checkpointAfter:  run.checkpointAfter,
             fetched,
             inserted,
             duplicates,
             unresolved,
             validationFailed,
             failed,
-            // legacy alias kept for backward compatibility
-            skipped: duplicates,
+            skipped: duplicates,  // legacy alias
             errors
         };
 
     } catch (pipelineError) {
-        // Fatal pipeline error (e.g., source adapter fetch threw)
+        // Fatal pipeline error — do NOT advance checkpoint
         run.completedAt           = new Date();
         run.fetchedCount          = fetched;
         run.insertedCount         = inserted;
         run.skippedCount          = duplicates;
-        run.failedCount           = failed;
+        run.failedCount           = failed + 1;
         run.unresolvedCount       = unresolved;
         run.validationFailedCount = validationFailed;
         run.processingErrors      = [
             ...errors,
             { externalRecordId: null, stage: "pipeline_fatal", message: pipelineError.message }
         ];
+        run.checkpointBefore       = checkpointBefore;
+        run.checkpointAfter        = checkpointBefore;  // unchanged — checkpoint safety
         run.status = "failed";
         await run.save();
+
+        // Record error in state
+        await advanceCheckpoint(sourceType, false, run._id, null);
+
+        // Release lock
+        await releaseLock(sourceType, run._id.toString());
 
         return {
             success:         false,
             runId:           run._id,
             sourceType,
             sourceName,
+            triggerType,
+            incremental:      !!sinceDate,
+            checkpointBefore,
+            checkpointAfter:  checkpointBefore,  // unchanged
             fetched,
             inserted,
             duplicates,
             unresolved,
             validationFailed,
-            failed,
+            failed:          failed + 1,
             skipped: duplicates,
             errors:  run.processingErrors
         };

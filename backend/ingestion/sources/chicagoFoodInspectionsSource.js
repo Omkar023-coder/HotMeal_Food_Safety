@@ -104,14 +104,25 @@ const buildDescription = (record) => {
 
 /**
  * Fetch recent restaurant inspection records from Chicago Open Data.
+ *
+ * @param {Object} options
+ * @param {Date|null} options.sinceDate — if provided, only fetch records after this date
  * @returns {Promise<Object[]>} Array of raw source records in common format
  */
-export const fetchRecords = async () => {
+export const fetchRecords = async (options = {}) => {
+    const { sinceDate } = options;
+
     const params = {
         $limit:        FETCH_LIMIT,
         $order:        "inspection_date DESC",
         facility_type: FACILITY_FILTER
     };
+
+    // 5D — incremental: filter by inspection_date if sinceDate is provided
+    if (sinceDate) {
+        const isoDate = new Date(sinceDate).toISOString();
+        params.$where = `inspection_date > '${isoDate}'`;
+    }
 
     // If a Socrata app token is configured, attach it to increase rate limits
     const headers = {};

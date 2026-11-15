@@ -30,7 +30,10 @@ export const safetySources = [
         enabled:      true,
         adapterFile:  "localTestSource",
         description:  "Hardcoded test records for pipeline testing. Not real evidence. Never for production use.",
-        notes:        "TEST ONLY — does not access the internet or any real authority."
+        notes:        "TEST ONLY — does not access the internet or any real authority.",
+        // 5D — incremental capabilities
+        supportsIncremental: false,
+        incrementalStrategy: "none"
     },
 
     // ── Chicago Department of Public Health — Food Inspections ──────────────
@@ -52,7 +55,12 @@ export const safetySources = [
         enabled:      true,
         adapterFile:  "chicagoFoodInspectionsSource",
         description:  "Real inspection records for Chicago food establishments from January 2010 to present, via Socrata Open Data API.",
-        notes:        "Publicly accessible, no auth required. Use ?$limit and ?$offset for pagination."
+        notes:        "Publicly accessible, no auth required. Use ?$limit and ?$offset for pagination.",
+        // 5D — incremental capabilities
+        // Socrata SODA API supports $where=inspection_date > 'timestamp'
+        supportsIncremental: true,
+        incrementalStrategy: "timestamp",
+        incrementalField:    "inspection_date"
     },
 
     // ── NYC DOHMH Restaurant Inspection Results ──────────────────────────────
@@ -74,7 +82,12 @@ export const safetySources = [
         enabled:      true,
         adapterFile:  "nycDohmhSource",
         description:  "Every sustained or not-yet-adjudicated violation from NYC restaurant inspections up to 3 years prior, via NYC Open Data / Socrata.",
-        notes:        "Publicly accessible, no auth required. CAMIS is the stable restaurant identifier."
+        notes:        "Publicly accessible, no auth required. CAMIS is the stable restaurant identifier.",
+        // 5D — incremental capabilities
+        // Socrata SODA API supports $where=inspection_date > 'timestamp'
+        supportsIncremental: true,
+        incrementalStrategy: "timestamp",
+        incrementalField:    "inspection_date"
     },
 
     // ── FSSAI (India) ─────────────────────────────────────────────────────────
@@ -93,7 +106,10 @@ export const safetySources = [
         enabled:      false,  // No stable public bulk-download or JSON API available
         adapterFile:  null,
         description:  "FSSAI maintains a searchable portal (FoSCoS) of licensed food businesses in India. No official bulk-download or public REST API is available as of Milestone 5B.",
-        notes:        "LIMITATION: FoSCoS provides a web UI for individual lookups only. A third-party paid API exists (RapidAPI) but is not official. Enable this source when an official API or verified data export becomes available."
+        notes:        "LIMITATION: FoSCoS provides a web UI for individual lookups only. A third-party paid API exists (RapidAPI) but is not official. Enable this source when an official API or verified data export becomes available.",
+        // 5D — no incremental support (disabled source)
+        supportsIncremental: false,
+        incrementalStrategy: "none"
     }
 ];
 

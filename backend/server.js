@@ -41,6 +41,11 @@ app.get("/",(req,res)=>{
         res.send("API working")
 })
 
+// ── Start ingestion scheduler (5D) ────────────────────────────────────────────
+// Disabled by default — must set SAFETY_INGESTION_ENABLED=true to activate
+import { startScheduler } from './ingestion/services/ingestionScheduler.js';
+startScheduler();
+
 app.listen(port,()=>{
     console.log(`Server started on http://localhost:${port}`)
 })

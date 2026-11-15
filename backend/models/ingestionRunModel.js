@@ -31,8 +31,26 @@ const ingestionRunSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["running", "completed", "completed_with_errors", "failed"],
+            enum: ["running", "completed", "completed_with_errors", "failed", "skipped", "already_running"],
             default: "running"
+        },
+
+        // 5D — who triggered this run?
+        triggerType: {
+            type: String,
+            enum: ["manual", "scheduled", "retry"],
+            default: "manual"
+        },
+
+        // 5D — incremental checkpoint tracking
+        checkpointBefore: {
+            type: Date,
+            default: null
+        },
+
+        checkpointAfter: {
+            type: Date,
+            default: null
         },
 
         fetchedCount: {

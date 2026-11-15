@@ -110,14 +110,27 @@ const mapType = (inspectionType) => {
 
 /**
  * Fetch recent restaurant inspection records from NYC Open Data.
+ *
+ * @param {Object} options
+ * @param {Date|null} options.sinceDate — if provided, only fetch records after this date
  * @returns {Promise<Object[]>} Array of raw source records in common format
  */
-export const fetchRecords = async () => {
+export const fetchRecords = async (options = {}) => {
+    const { sinceDate } = options;
+
     const params = {
         $limit:  FETCH_LIMIT,
-        $order:  "inspection_date DESC",
-        $where:  "inspection_date > '1900-01-02T00:00:00'"  // filter out placeholder dates
+        $order:  "inspection_date DESC"
     };
+
+    // 5D — incremental: filter by inspection_date if sinceDate is provided
+    // Combine with the placeholder-date filter
+    if (sinceDate) {
+        const isoDate = new Date(sinceDate).toISOString();
+        params.$where = `inspection_date > '${isoDate}'`;
+    } else {
+        params.$where = "inspection_date > '1900-01-02T00:00:00'";  // filter out placeholder dates
+    }
 
     const headers = {};
     if (process.env.NYC_SOCRATA_APP_TOKEN) {
