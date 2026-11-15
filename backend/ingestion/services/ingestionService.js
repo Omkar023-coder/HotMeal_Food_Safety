@@ -195,6 +195,7 @@ const runIngestion = async (sourceAdapter, options = {}) => {
         // ── Finalize audit run ─────────────────────────────────────────────────
         const ranWithErrors = (validationFailed + unresolved + failed) > 0;
         run.completedAt           = new Date();
+        run.durationMs            = run.completedAt.getTime() - run.startedAt.getTime();
         run.fetchedCount          = fetched;
         run.insertedCount         = inserted;
         run.skippedCount          = duplicates;
@@ -206,6 +207,12 @@ const runIngestion = async (sourceAdapter, options = {}) => {
         run.checkpointAfter        = runSucceeded ? newCheckpoint : checkpointBefore;
         run.status = failed > 0 ? "failed" : (ranWithErrors ? "completed_with_errors" : "completed");
         await run.save();
+
+        // ── Structured log ─────────────────────────────────────────────────────
+        console.log(`[INGESTION] source=${sourceType} run=${run._id} status=${run.status} `+
+            `fetched=${fetched} inserted=${inserted} duplicates=${duplicates} `+
+            `unresolved=${unresolved} validationFailed=${validationFailed} `+
+            `failed=${failed} durationMs=${run.durationMs}`);
 
         // ── Release lock ───────────────────────────────────────────────────────
         await releaseLock(sourceType, run._id.toString());
@@ -232,6 +239,7 @@ const runIngestion = async (sourceAdapter, options = {}) => {
     } catch (pipelineError) {
         // Fatal pipeline error — do NOT advance checkpoint
         run.completedAt           = new Date();
+        run.durationMs            = run.completedAt.getTime() - run.startedAt.getTime();
         run.fetchedCount          = fetched;
         run.insertedCount         = inserted;
         run.skippedCount          = duplicates;
@@ -246,6 +254,10 @@ const runIngestion = async (sourceAdapter, options = {}) => {
         run.checkpointAfter        = checkpointBefore;  // unchanged — checkpoint safety
         run.status = "failed";
         await run.save();
+
+        // ── Structured log (fatal) ─────────────────────────────────────────────
+        console.log(`[INGESTION] source=${sourceType} run=${run._id} status=failed `+
+            `stage=pipeline_fatal error="${pipelineError.message}" durationMs=${run.durationMs}`);
 
         // Record error in state
         await advanceCheckpoint(sourceType, false, run._id, null);

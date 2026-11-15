@@ -10,6 +10,7 @@
 | 5B | ✅ | Real authoritative sources (Chicago CDPH, NYC DOHMH) |
 | 5C | ✅ | Production pipeline with granular result tracking, rawData |
 | 5D | ✅ | Incremental ingestion, scheduling, run locking, checkpoint safety |
+| 5E | ✅ | Ingestion observability: duration, source health, health endpoint, run detail |
 
 ---
 
@@ -137,9 +138,51 @@ Lock released
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/ingestion/run` | Admin | Trigger manual ingestion |
-| GET | `/api/ingestion/sources` | Admin | List enabled sources |
-| GET | `/api/ingestion/status` | Admin | Ingestion state + scheduler status |
-| GET | `/api/ingestion/runs` | Admin | Recent run history |
+| GET | `/api/ingestion/sources` | Admin | List enabled sources with capabilities |
+| GET | `/api/ingestion/status` | Admin | Full operational snapshot: scheduler, source health, locks, checkpoints |
+| GET | `/api/ingestion/health` | Admin | Lightweight health/readiness check (fast, no external calls) |
+| GET | `/api/ingestion/runs` | Admin | Recent run history (default 20, max 100; `?limit=N`) |
+| GET | `/api/ingestion/runs/:id` | Admin | Single run detail including processingErrors |
+
+---
+
+## Run Status Semantics
+
+| Status | Meaning |
+|---|---|
+| `running` | Run started, not yet finished |
+| `completed` | All records processed, no failures |
+| `completed_with_errors` | Completed but some records were unresolved or validation failed |
+| `failed` | Critical failure — source fetch or pipeline crash |
+| `already_running` | Skipped because a concurrent run was in progress |
+
+## Run Duration (5E)
+
+Every completed run records `durationMs` (milliseconds):
+
+```text
+durationMs = completedAt - startedAt
+```
+
+Calculated by the backend in UTC. Never uses client-provided values.
+
+## Source Health (5E)
+
+The `/api/ingestion/status` endpoint exposes per-source operational health:
+
+- `lastRun` — most recent run summary (any status)
+- `lastSuccessfulRun` — most recent completed/completed_with_errors run
+- `lastFailedRun` — most recent failed run
+- `lastAttemptAt`, `lastSuccessAt`, `lastError` — from persistent state
+
+## Ingestion Health Endpoint (5E)
+
+`GET /api/ingestion/health` — fast, no external API calls:
+
+- DB connectivity (implicit — if this responds, DB is reachable)
+- Scheduler enabled/running status
+- Stale lock detection
+- Misconfigured source detection
 
 ---
 
@@ -147,7 +190,7 @@ Lock released
 
 Each run (manual or scheduled) creates an `ingestionRun` document:
 
-- `sourceType`, `sourceName`, `startedAt`, `completedAt`
+- `sourceType`, `sourceName`, `startedAt`, `completedAt`, `durationMs`
 - `status`: `running` | `completed` | `completed_with_errors` | `failed` | `skipped` | `already_running`
 - `triggerType`: `manual` | `scheduled` | `retry`
 - `checkpointBefore`, `checkpointAfter`

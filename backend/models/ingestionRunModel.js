@@ -29,6 +29,12 @@ const ingestionRunSchema = new mongoose.Schema(
             default: null
         },
 
+        // 5E — duration in milliseconds (completedAt - startedAt)
+        durationMs: {
+            type: Number,
+            default: null
+        },
+
         status: {
             type: String,
             enum: ["running", "completed", "completed_with_errors", "failed", "skipped", "already_running"],
