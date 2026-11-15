@@ -8,6 +8,7 @@ import Orders from './pages/Orders/Orders';
 import AddRestaurant from './pages/AddRestaurant/AddRestaurant';
 import ListRestaurant from './pages/ListRestaurant/ListRestaurant';
 import SafetyEvidence from './pages/SafetyEvidence/SafetyEvidence';
+import IngestionDashboard from './pages/IngestionDashboard/IngestionDashboard';
 import Login from './pages/Login/Login';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -69,6 +70,8 @@ const App = () => {
           <Route path='/list-restaurant' element={<ListRestaurant url={url} />} />
           {/* Safety Evidence */}
           <Route path='/safety-evidence' element={<SafetyEvidence url={url} />} />
+          {/* Ingestion Dashboard */}
+          <Route path='/ingestion' element={<IngestionDashboard url={url} />} />
           {/* Default */}
           <Route path='*' element={<Add url={url} />} />
         </Routes>

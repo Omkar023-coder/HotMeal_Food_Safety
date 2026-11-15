@@ -1,0 +1,458 @@
+/* ── Page container — matches existing .add pattern ─────────────────── */
+.ingestion-dashboard {
+    width: 90%;
+    margin-left: max(5vw, 25px);
+    margin-top: 40px;
+    color: #6d6d6d;
+    font-size: 14px;
+    gap: 20px;
+}
+
+/* ── Header row ─────────────────────────────────────────────────────── */
+.id-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.id-header p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.id-refresh-btn {
+    border: 1px solid #c5c5c5;
+    background: transparent;
+    color: #49557e;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.id-refresh-btn:hover:not(:disabled) {
+    border-color: tomato;
+    color: tomato;
+}
+
+.id-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Section ─────────────────────────────────────────────────────────── */
+.id-section {
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px 24px;
+}
+
+.id-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+/* ── Health grid ─────────────────────────────────────────────────────── */
+.id-health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.id-health-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.id-health-card.id-healthy {
+    border-color: #c8e6c9;
+    background: #f1f8f1;
+}
+
+.id-health-card.id-unhealthy {
+    border-color: #fdecea;
+    background: #fef5f5;
+}
+
+.id-health-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #999;
+}
+
+.id-health-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.id-health-value.id-warn {
+    color: #e65100;
+}
+
+.id-scheduler-info {
+    font-size: 12px;
+    color: #888;
+    margin-top: 12px;
+}
+
+/* ── Run ingestion control ───────────────────────────────────────────── */
+.id-run-control {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.id-source-select {
+    padding: 9px 10px;
+    border: 1px solid #c5c5c5;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    min-width: 240px;
+}
+
+.id-source-select:focus {
+    border-color: tomato;
+}
+
+.id-run-btn {
+    padding: 9px 24px;
+    border: none;
+    border-radius: 4px;
+    background-color: tomato;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.id-run-btn:hover:not(:disabled) {
+    background-color: #e55a2b;
+}
+
+.id-run-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.id-run-hint {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 10px;
+}
+
+/* ── Source health cards ────────────────────────────────────────────── */
+.id-source-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.id-source-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px 20px;
+}
+
+.id-source-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.id-source-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.id-source-lock {
+    font-size: 12px;
+    color: #888;
+}
+
+.id-source-lock.id-lock-active {
+    color: #e65100;
+    font-weight: 600;
+}
+
+.id-source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.id-source-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.id-source-field.id-source-error .id-field-value {
+    color: #c62828;
+    font-size: 12px;
+}
+
+.id-field-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #999;
+}
+
+.id-field-value {
+    font-size: 13px;
+    color: #555;
+}
+
+/* ── Status badges ───────────────────────────────────────────────────── */
+.id-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.id-status-completed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.id-status-completed_with_errors {
+    background: #fff8e1;
+    color: #f57f17;
+}
+
+.id-status-failed {
+    background: #fdecea;
+    color: #c62828;
+}
+
+.id-status-running {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.id-status-already_running {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+.id-status-skipped {
+    background: #eceff1;
+    color: #546e7a;
+}
+
+/* ── Run history table ──────────────────────────────────────────────── */
+.id-runs-table {
+    overflow-x: auto;
+}
+
+.id-runs-format {
+    display: grid;
+    grid-template-columns: 1.4fr 1.5fr 1fr 0.8fr 0.7fr 0.6fr 0.6fr 0.6fr 0.6fr 0.7fr 0.6fr 0.5fr;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #cacaca;
+    border-top: 0;
+    font-size: 12px;
+}
+
+.id-runs-format:first-child {
+    border-top: 1px solid #cacaca;
+}
+
+.id-runs-title {
+    background-color: #f9f9f9;
+}
+
+.id-runs-format p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Detail button ───────────────────────────────────────────────────── */
+.id-detail-btn {
+    border: 1px solid tomato;
+    background: transparent;
+    color: tomato;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.id-detail-btn:hover {
+    background-color: #fff4f2;
+}
+
+/* ── Loading / empty states ─────────────────────────────────────────── */
+.id-loading-text {
+    padding: 16px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.id-empty-text {
+    padding: 16px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+/* ── Run detail modal ────────────────────────────────────────────────── */
+.id-detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #00000090;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.id-detail-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 28px 32px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-top: 4px solid tomato;
+}
+
+.id-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.id-detail-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.id-detail-close {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    color: #999;
+}
+
+.id-detail-close:hover {
+    color: #333;
+}
+
+.id-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.id-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.id-detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.id-detail-subtitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+/* ── Processing errors ──────────────────────────────────────────────── */
+.id-errors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.id-error-item {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 3fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.id-error-stage {
+    font-weight: 600;
+    color: #e65100;
+}
+
+.id-error-id {
+    color: #888;
+}
+
+.id-error-msg {
+    color: #555;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .id-runs-format {
+        grid-template-columns: 1.4fr 1.5fr 1fr 0.8fr;
+        gap: 6px;
+    }
+
+    .id-runs-title {
+        display: none;
+    }
+
+    .id-source-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .id-run-control {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .id-source-select {
+        min-width: 100%;
+    }
+
+    .id-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

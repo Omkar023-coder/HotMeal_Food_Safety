@@ -40,6 +40,11 @@ const Sidebar = () => {
           <img src={assets.order_icon} alt="" />
           <p>Safety Evidence</p>
         </NavLink>
+        {/* Ingestion Dashboard */}
+        <NavLink to='/ingestion' className="sidebar-option">
+          <img src={assets.order_icon} alt="" />
+          <p>Ingestion</p>
+        </NavLink>
 
       </div>
     </div>
