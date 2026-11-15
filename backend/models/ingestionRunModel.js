@@ -55,6 +55,17 @@ const ingestionRunSchema = new mongoose.Schema(
             default: 0
         },
 
+        // 5C — granular sub-counts within failedCount
+        unresolvedCount: {
+            type: Number,
+            default: 0
+        },
+
+        validationFailedCount: {
+            type: Number,
+            default: 0
+        },
+
         processingErrors: {
             type: Array,
             default: []

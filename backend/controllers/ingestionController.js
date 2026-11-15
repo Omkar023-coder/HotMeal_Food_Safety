@@ -74,18 +74,22 @@ const runIngestionHandler = async (req, res) => {
         return res.status(statusCode).json({
             success: result.success,
             message: result.success
-                ? `Ingestion completed. ${result.inserted} inserted, ${result.skipped} skipped, ${result.failed} failed.`
+                ? `Ingestion completed. ${result.inserted} inserted, ${result.duplicates} duplicates, ${result.unresolved} unresolved, ${result.validationFailed} validation failed, ${result.failed} errors.`
                 : `Ingestion failed: ${result.errors?.[result.errors.length - 1]?.message || "Unknown error"}`,
             data: {
-                runId:      result.runId,
+                runId:           result.runId,
                 sourceId,
-                sourceType: result.sourceType,
-                sourceName: result.sourceName,
-                fetched:    result.fetched,
-                inserted:   result.inserted,
-                skipped:    result.skipped,
-                failed:     result.failed,
-                errors:     result.errors
+                sourceType:      result.sourceType,
+                sourceName:      result.sourceName,
+                fetched:         result.fetched,
+                inserted:        result.inserted,
+                duplicates:      result.duplicates,
+                unresolved:      result.unresolved,
+                validationFailed: result.validationFailed,
+                failed:          result.failed,
+                // legacy alias
+                skipped:         result.duplicates,
+                errors:          result.errors
             }
         });
 

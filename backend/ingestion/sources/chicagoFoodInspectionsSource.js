@@ -150,7 +150,25 @@ export const fetchRecords = async () => {
         // Classification
         type:     "inspection",
         status:   mapResult(r.results),
-        severity: mapRisk(r.risk)
+        severity: mapRisk(r.risk),
+
+        // Raw source record — preserved for auditability, never stored in DB
+        rawData: {
+            inspection_id:   r.inspection_id,
+            dba_name:        r.dba_name,
+            aka_name:        r.aka_name,
+            license_:        r.license_,
+            facility_type:   r.facility_type,
+            risk:            r.risk,
+            address:         r.address,
+            city:            r.city,
+            state:           r.state,
+            zip:             r.zip,
+            inspection_date: r.inspection_date,
+            inspection_type: r.inspection_type,
+            results:         r.results
+            // violations intentionally omitted — already in description
+        }
     }));
 };
 

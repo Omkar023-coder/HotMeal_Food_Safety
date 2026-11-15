@@ -160,7 +160,24 @@ export const fetchRecords = async () => {
         // Classification
         type:     mapType(r.inspection_type),
         status:   mapGrade(r.grade, r.action),
-        severity: mapCriticalFlag(r.critical_flag)
+        severity: mapCriticalFlag(r.critical_flag),
+
+        // Raw source record — preserved for auditability, never stored in DB
+        rawData: {
+            camis:               r.camis,
+            dba:                 r.dba,
+            boro:                r.boro,
+            zipcode:             r.zipcode,
+            inspection_date:     r.inspection_date,
+            inspection_type:     r.inspection_type,
+            action:              r.action,
+            violation_code:      r.violation_code,
+            critical_flag:       r.critical_flag,
+            score:               r.score,
+            grade:               r.grade,
+            grade_date:          r.grade_date,
+            record_date:         r.record_date
+        }
     }));
 };
 
