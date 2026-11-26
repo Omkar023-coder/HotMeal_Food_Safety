@@ -13,7 +13,7 @@ The project is being incrementally extended into a **Restaurant Safety Intellige
 The system is designed so that **AI analysis comes later**, built on top of real source-derived evidence. The core principle is:
 
 ![Hotmeal Home Page](backend/uploads/image.png)
-![Hotmeal Menu](backend/uploads/image-2.png)
+![Hotmeal Menu](backend/uploads/image-1.png)
 
 > *Evidence must come from a source. AI may later analyze evidence, but AI must never become the source of evidence.*
 
